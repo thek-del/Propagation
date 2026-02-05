@@ -1,0 +1,58 @@
+#!/usr/bin/python3
+
+import requests
+import re
+
+# Colori ANSI
+GREEN = "\033[92m"
+ORANGE = "\033[93m"
+RED = "\033[91m"
+RESET = "\033[0m"
+
+def valutazione(valore, buono, medio):
+    if valore <= buono:
+        return GREEN
+    elif valore <= medio:
+        return ORANGE
+    else:
+        return RED
+
+def color_sfi(value):
+    value = int(value)
+    color = valutazione(-value, -140, -100)  # Più alto è, meglio è
+    return f"{color}{value}{RESET}"
+
+def color_a_index(value):
+    value = int(value)
+    color = valutazione(value, 10, 20)
+    return f"{color}{value}{RESET}"
+
+def color_k_index(value):
+    value = float(value)
+    color = valutazione(value, 2, 4)
+    return f"{color}{value}{RESET}"
+
+def get_solar_data():
+    url = "https://services.swpc.noaa.gov/text/wwv.txt"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.text
+
+        sfi = re.search(r"Solar flux\s+(\d+)", data)
+        a_index = re.search(r"A-index\s+(\d+)", data)
+        k_index = re.search(r"K-index.*?(\d+\.\d+)", data)
+
+        sfi_val = sfi.group(1) if sfi else "N/A"
+        a_val = a_index.group(1) if a_index else "N/A"
+        k_val = k_index.group(1) if k_index else "N/A"
+
+        print(f"🌞 SFI: {color_sfi(sfi_val)}")
+        print(f"🌍 A-index: {color_a_index(a_val)}")
+        print(f"🧭 K-index: {color_k_index(k_val)}")
+    else:
+        print("Errore nel recupero dei dati.")
+
+# Esecuzione dello script
+get_solar_data()
+
